@@ -18,7 +18,7 @@ It is ready to deploy on Render and gives you a real public API URL like:
 - Dockerized deployment
 - Render Blueprint file: `render.yaml`
 
-## Open-source-friendly production setup
+## Open-source-friendly Render setup
 
 This repository is configured so it can be deployed as an open API service on Render with:
 
@@ -28,23 +28,24 @@ This repository is configured so it can be deployed as an open API service on Re
 - automatic database migration retry on startup
 - configurable CORS for public clients
 - Render-managed PostgreSQL and Key Value services
-- persistent disk for uploaded files
+- free-tier-friendly deployment files
 
-## Important note about Render plans
+## Important note about Render free plan
 
-This backend uses SignalR, a background worker, PostgreSQL, Redis-compatible cache, and persistent file uploads.
+This repository is now configured for Render free instances.
 
-Because of that, the included `render.yaml` uses paid Render resources:
+That makes it easier to launch, but Render's official docs say free services have important limitations:
 
-- Web service: `starter`
-- Key Value: `starter`
-- Postgres: `basic-256mb`
+- free web services spin down after 15 minutes without traffic
+- wake-up can take around a minute
+- local uploaded files are lost on restart, redeploy, or spin-down
+- free services are not recommended for production apps
 
-That is intentional. Free services are not a good fit for a real-time chat API that should stay online for users.
+That means `axon-weave` can be deployed for free, but it is best for demos, testing, open-source previews, and early development, not for a serious always-on public chat product.
 
 ## Fastest way to deploy on Render
 
-### Option 1: Blueprint deploy from this repo
+### Option 1: Free Blueprint deploy from this repo
 
 1. Go to Render.
 2. Click `New`.
@@ -79,7 +80,12 @@ The `render.yaml` file creates:
 - one Docker web service for the API
 - one Render PostgreSQL database
 - one Render Key Value instance
-- one persistent disk mounted to `/app/uploads`
+
+Important:
+
+- On Render free tier, uploads stored in `/app/uploads` are temporary
+- if the service restarts or spins down, those files disappear
+- for long-term file storage, you should later move uploads to Cloudinary, Amazon S3, Cloudflare R2, or another object storage service
 
 ## Health and docs endpoints
 
@@ -319,12 +325,12 @@ Even though deployment is ready, these are the last business-level items to deci
 
 - connect a real SMS provider for OTPs
 - set your final frontend domain if you want restricted CORS
-- decide whether file uploads should stay on Render disk or move to S3 / Cloudflare R2
+- move uploads to Cloudinary, S3, or Cloudflare R2 if you want files to survive redeploys
 - choose your moderation, abuse protection, and user support policies
 
 ## Files added for deployment
 
-- `render.yaml` Render Blueprint
+- `render.yaml` Render Blueprint for free Render services
 - `.dockerignore` faster cleaner Docker builds
 - updated `Program.cs` for Render port binding, health checks, migration retries, and open API behavior
 - updated production configuration for safer defaults
