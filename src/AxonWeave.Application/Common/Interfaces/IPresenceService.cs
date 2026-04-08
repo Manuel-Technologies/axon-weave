@@ -1,0 +1,9 @@
+namespace AxonWeave.Application.Common.Interfaces;
+
+public interface IPresenceService
+{
+    Task SetOnlineAsync(Guid userId, CancellationToken cancellationToken = default);
+    Task SetOfflineAsync(Guid userId, CancellationToken cancellationToken = default);
+    Task<bool> IsOnlineAsync(Guid userId, CancellationToken cancellationToken = default);
+    Task RefreshAsync(Guid userId, CancellationToken cancellationToken = default);
+}

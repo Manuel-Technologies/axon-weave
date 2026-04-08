@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/AxonWeave.API/AxonWeave.API.csproj" />
+    <Project Path="src/AxonWeave.Application/AxonWeave.Application.csproj" />
+    <Project Path="src/AxonWeave.Domain/AxonWeave.Domain.csproj" />
+    <Project Path="src/AxonWeave.Infrastructure/AxonWeave.Infrastructure.csproj" />
+  </Folder>
+</Solution>
