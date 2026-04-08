@@ -1,0 +1,55 @@
+services:
+  - type: web
+    name: axon-weave-api
+    runtime: docker
+    plan: starter
+    region: oregon
+    dockerfilePath: ./Dockerfile
+    autoDeploy: true
+    healthCheckPath: /health/ready
+    disk:
+      name: axon-weave-uploads
+      mountPath: /app/uploads
+      sizeGB: 1
+    envVars:
+      - key: ASPNETCORE_ENVIRONMENT
+        value: Production
+      - key: ConnectionStrings__DefaultConnection
+        fromDatabase:
+          name: axon-weave-db
+          property: connectionString
+      - key: Redis__ConnectionString
+        fromService:
+          type: keyvalue
+          name: axon-weave-redis
+          property: connectionString
+      - key: Jwt__Issuer
+        value: axon-weave
+      - key: Jwt__Audience
+        value: axon-weave-client
+      - key: Jwt__SecretKey
+        generateValue: true
+      - key: Otp__UseStaticOtp
+        value: "false"
+      - key: Otp__ExpiryMinutes
+        value: "5"
+      - key: Storage__RootPath
+        value: /app/uploads
+      - key: Cors__AllowAnyOrigin
+        value: "true"
+
+  - type: keyvalue
+    name: axon-weave-redis
+    plan: starter
+    region: oregon
+    ipAllowList: []
+    maxmemoryPolicy: allkeys-lru
+
+databases:
+  - name: axon-weave-db
+    plan: basic-256mb
+    region: oregon
+    databaseName: axon_weave
+    user: axon_weave
+    postgresMajorVersion: "17"
+    ipAllowList: []

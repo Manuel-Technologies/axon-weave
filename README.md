@@ -1,37 +1,150 @@
 # axon-weave
 
-`axon-weave` is a .NET 8 chat backend built with Clean Architecture, ASP.NET Core REST APIs, SignalR, PostgreSQL, Redis presence tracking, JWT authentication, and a background worker for retrying failed deliveries.
+`axon-weave` is an open-source chat backend built with .NET 8, ASP.NET Core, SignalR, PostgreSQL, and Redis-compatible presence tracking.
 
-## Architecture
+It is ready to deploy on Render and gives you a real public API URL like:
 
-- `src/AxonWeave.Domain`: entities and enums
-- `src/AxonWeave.Application`: DTOs, interfaces, options, shared contracts
-- `src/AxonWeave.Infrastructure`: EF Core, repositories, unit of work, JWT, OTP, Redis, file storage
-- `src/AxonWeave.API`: controllers, SignalR hub, worker, app bootstrap
+- `https://your-service-name.onrender.com/api/auth/register`
+- `https://your-service-name.onrender.com/hubs/chat`
+- `https://your-service-name.onrender.com/swagger`
 
-## Run With Docker
+## What this project includes
 
-```bash
-docker compose up --build
+- REST API for auth, users, conversations, messages, media, and read receipts
+- SignalR hub for real-time messaging, typing indicators, online presence, and delivery receipts
+- PostgreSQL with EF Core migrations
+- Redis-compatible presence tracking
+- Background worker for retrying failed message deliveries
+- Dockerized deployment
+- Render Blueprint file: `render.yaml`
+
+## Open-source-friendly production setup
+
+This repository is configured so it can be deployed as an open API service on Render with:
+
+- public HTTPS URL
+- Swagger docs enabled in production
+- health endpoints for uptime checks
+- automatic database migration retry on startup
+- configurable CORS for public clients
+- Render-managed PostgreSQL and Key Value services
+- persistent disk for uploaded files
+
+## Important note about Render plans
+
+This backend uses SignalR, a background worker, PostgreSQL, Redis-compatible cache, and persistent file uploads.
+
+Because of that, the included `render.yaml` uses paid Render resources:
+
+- Web service: `starter`
+- Key Value: `starter`
+- Postgres: `basic-256mb`
+
+That is intentional. Free services are not a good fit for a real-time chat API that should stay online for users.
+
+## Fastest way to deploy on Render
+
+### Option 1: Blueprint deploy from this repo
+
+1. Go to Render.
+2. Click `New`.
+3. Click `Blueprint`.
+4. Connect your GitHub account if Render asks.
+5. Select this repository: `Manuel-Technologies/axon-weave`
+6. Render will detect `render.yaml`
+7. Review the services Render is about to create:
+   - `axon-weave-api`
+   - `axon-weave-db`
+   - `axon-weave-redis`
+8. Click `Apply`
+9. Wait for deployment to finish
+
+When it is done, Render gives you a public URL such as:
+
+```text
+https://axon-weave-api.onrender.com
 ```
 
-API base URL: `http://localhost:8080`
+Your live API URLs will then be:
 
-Swagger UI: `http://localhost:8080/swagger`
+- `https://axon-weave-api.onrender.com/swagger`
+- `https://axon-weave-api.onrender.com/health`
+- `https://axon-weave-api.onrender.com/api/auth/register`
+- `https://axon-weave-api.onrender.com/hubs/chat`
 
-## Authentication Flow
+## Render resources created by this repo
 
-The development profile uses a static OTP code of `123456`. `POST /api/auth/register` also returns `developmentOtp` while `Otp:UseStaticOtp` is `true`.
+The `render.yaml` file creates:
 
-## REST API Examples
+- one Docker web service for the API
+- one Render PostgreSQL database
+- one Render Key Value instance
+- one persistent disk mounted to `/app/uploads`
 
-Set the base URL:
+## Health and docs endpoints
+
+After deployment, these URLs should work:
+
+- `/` basic service metadata
+- `/swagger` API docs and testing UI
+- `/health` simple liveness endpoint
+- `/health/ready` readiness check for database + Redis-compatible cache
+
+Example:
 
 ```bash
-export BASE_URL=http://localhost:8080
+curl https://your-service-name.onrender.com/health
 ```
+
+## First API test after deploy
 
 Register a user:
+
+```bash
+curl -X POST "https://your-service-name.onrender.com/api/auth/register" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "phoneNumber": "+2348012345678",
+    "name": "Ada Lovelace"
+  }'
+```
+
+## Authentication flow
+
+### Development
+
+Local development uses a static OTP code:
+
+```text
+123456
+```
+
+### Production on Render
+
+Production is configured to disable static OTP by default:
+
+- `Otp__UseStaticOtp=false`
+
+That means you should wire in a real SMS/OTP provider before inviting public users.
+
+For demo/testing on Render, you can temporarily set:
+
+```text
+Otp__UseStaticOtp=true
+Otp__StaticOtpCode=123456
+```
+
+inside the Render dashboard for the API service.
+
+## REST API examples
+
+Set a base URL:
+
+```bash
+export BASE_URL=https://your-service-name.onrender.com
+```
+
+Register:
 
 ```bash
 curl -X POST "$BASE_URL/api/auth/register" \
@@ -42,7 +155,7 @@ curl -X POST "$BASE_URL/api/auth/register" \
   }'
 ```
 
-Verify OTP and get JWT:
+Verify OTP:
 
 ```bash
 curl -X POST "$BASE_URL/api/auth/verify-otp" \
@@ -88,21 +201,21 @@ curl -X POST "$BASE_URL/api/conversations" \
   }'
 ```
 
-List current user's conversations:
+List conversations:
 
 ```bash
 curl "$BASE_URL/api/conversations" \
   -H "Authorization: Bearer YOUR_JWT"
 ```
 
-Get messages with pagination:
+Get messages:
 
 ```bash
 curl "$BASE_URL/api/messages?conversationId=CONVERSATION_ID&before=2026-04-08T09:00:00Z&limit=50" \
   -H "Authorization: Bearer YOUR_JWT"
 ```
 
-Send a message over REST:
+Send message over REST:
 
 ```bash
 curl -X POST "$BASE_URL/api/messages" \
@@ -116,7 +229,7 @@ curl -X POST "$BASE_URL/api/messages" \
   }'
 ```
 
-Delete a message for everyone:
+Delete message for everyone:
 
 ```bash
 curl -X DELETE "$BASE_URL/api/messages/MESSAGE_ID" \
@@ -131,7 +244,7 @@ curl -X POST "$BASE_URL/api/media/upload" \
   -F "file=@/path/to/image.png"
 ```
 
-Mark a message as read:
+Mark as read:
 
 ```bash
 curl -X PUT "$BASE_URL/api/messages/MESSAGE_ID/read" \
@@ -142,14 +255,16 @@ curl -X PUT "$BASE_URL/api/messages/MESSAGE_ID/read" \
   }'
 ```
 
-## SignalR JavaScript Client Example
+## JavaScript SignalR client example
 
 ```html
 <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.7/signalr.min.js"></script>
 <script>
   const token = "YOUR_JWT";
+  const baseUrl = "https://your-service-name.onrender.com";
+
   const connection = new signalR.HubConnectionBuilder()
-    .withUrl("http://localhost:8080/hubs/chat", {
+    .withUrl(`${baseUrl}/hubs/chat`, {
       accessTokenFactory: () => token
     })
     .withAutomaticReconnect()
@@ -186,10 +301,38 @@ curl -X PUT "$BASE_URL/api/messages/MESSAGE_ID/read" \
 </script>
 ```
 
-## Notes
+## Local development
 
-- JWT bearer auth is enabled for both HTTP controllers and `/hubs/chat`.
-- Redis stores user presence with a TTL so stale connections age out.
-- The background worker retries failed deliveries every 15 seconds.
-- Message storage is indexed by `(conversation_id, created_at)` through EF Core.
-- Uploaded media is stored locally in `/app/uploads` inside the container.
+```bash
+docker compose up --build
+```
+
+Swagger:
+
+```text
+http://localhost:8080/swagger
+```
+
+## What you still need before public launch
+
+Even though deployment is ready, these are the last business-level items to decide:
+
+- connect a real SMS provider for OTPs
+- set your final frontend domain if you want restricted CORS
+- decide whether file uploads should stay on Render disk or move to S3 / Cloudflare R2
+- choose your moderation, abuse protection, and user support policies
+
+## Files added for deployment
+
+- `render.yaml` Render Blueprint
+- `.dockerignore` faster cleaner Docker builds
+- updated `Program.cs` for Render port binding, health checks, migration retries, and open API behavior
+- updated production configuration for safer defaults
+
+## Official Render docs used
+
+- Blueprint YAML reference: https://render.com/docs/blueprint-spec
+- Render Blueprints: https://render.com/docs/infrastructure-as-code
+- Render environment variables: https://render.com/docs/environment-variables
+- Render Key Value: https://render.com/docs/key-value
+- Render Postgres: https://render.com/docs/postgresql
