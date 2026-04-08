@@ -1,4 +1,5 @@
 using AxonWeave.Application.Common.Interfaces;
+using Microsoft.AspNetCore.Http;
 using System.Security.Claims;
 
 namespace AxonWeave.Infrastructure.Services;
