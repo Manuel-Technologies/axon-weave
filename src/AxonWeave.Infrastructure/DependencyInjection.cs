@@ -37,7 +37,8 @@ public static class DependencyInjection
         services.AddSingleton<IConnectionMultiplexer>(sp =>
         {
             var options = sp.GetRequiredService<IOptions<RedisOptions>>().Value;
-            return ConnectionMultiplexer.Connect(NormalizeRedisConnectionString(options.ConnectionString));
+            var configured = sp.GetRequiredService<IConfiguration>()["REDIS_URL"] ?? options.ConnectionString;
+            return ConnectionMultiplexer.Connect(NormalizeRedisConnectionString(configured));
         });
         services.AddSingleton<IPresenceService, RedisPresenceService>();
 
@@ -80,16 +81,16 @@ public static class DependencyInjection
 
     private static string ResolvePostgresConnectionString(IConfiguration configuration)
     {
-        var configured = configuration.GetConnectionString("DefaultConnection");
-        if (!string.IsNullOrWhiteSpace(configured))
-        {
-            return NormalizePostgresConnectionString(configured);
-        }
-
         var databaseUrl = configuration["DATABASE_URL"];
         if (!string.IsNullOrWhiteSpace(databaseUrl))
         {
             return NormalizePostgresConnectionString(databaseUrl);
+        }
+
+        var configured = configuration.GetConnectionString("DefaultConnection");
+        if (!string.IsNullOrWhiteSpace(configured))
+        {
+            return NormalizePostgresConnectionString(configured);
         }
 
         throw new InvalidOperationException("No PostgreSQL connection string was configured.");

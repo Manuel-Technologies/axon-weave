@@ -89,7 +89,7 @@ app.Use((context, next) =>
     return next();
 });
 
-await ApplyDatabaseMigrationsWithRetryAsync(app.Services, app.Logger);
+await TryApplyDatabaseMigrationsWithRetryAsync(app.Services, app.Logger);
 
 var storageOptions = app.Services.GetRequiredService<IConfiguration>()
     .GetSection(StorageOptions.SectionName)
@@ -136,7 +136,7 @@ app.MapGet("/health/ready", async (ApplicationDbContext dbContext, IConnectionMu
 
 app.Run();
 
-static async Task ApplyDatabaseMigrationsWithRetryAsync(IServiceProvider services, ILogger logger)
+static async Task TryApplyDatabaseMigrationsWithRetryAsync(IServiceProvider services, ILogger logger)
 {
     const int maxRetries = 10;
 
@@ -155,8 +155,15 @@ static async Task ApplyDatabaseMigrationsWithRetryAsync(IServiceProvider service
             await Task.Delay(TimeSpan.FromSeconds(Math.Min(attempt * 3, 30)));
         }
     }
-
-    using var finalScope = services.CreateScope();
-    var finalDbContext = finalScope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-    await finalDbContext.Database.MigrateAsync();
+    
+    try
+    {
+        using var finalScope = services.CreateScope();
+        var finalDbContext = finalScope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        await finalDbContext.Database.MigrateAsync();
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, "Database migrations failed after all retries. The API will continue starting, but readiness checks will stay unhealthy until the database becomes reachable.");
+    }
 }
