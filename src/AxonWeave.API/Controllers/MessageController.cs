@@ -88,6 +88,7 @@ public class MessageController : AuthenticatedControllerBase
             var isOnline = await _presenceService.IsOnlineAsync(participantId, cancellationToken);
             message.Deliveries.Add(new MessageDelivery
             {
+                MessageId = message.Id,
                 UserId = participantId,
                 Status = isOnline ? MessageDeliveryStatus.Delivered : MessageDeliveryStatus.Failed,
                 DeliveredAt = isOnline ? DateTimeOffset.UtcNow : null,

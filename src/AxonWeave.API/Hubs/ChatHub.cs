@@ -79,6 +79,7 @@ public class ChatHub : Hub
             var isOnline = await _presenceService.IsOnlineAsync(participantId);
             message.Deliveries.Add(new MessageDelivery
             {
+                MessageId = message.Id,
                 UserId = participantId,
                 Status = isOnline ? MessageDeliveryStatus.Delivered : MessageDeliveryStatus.Failed,
                 DeliveredAt = isOnline ? DateTimeOffset.UtcNow : null,
