@@ -29,6 +29,7 @@ builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddScoped<IChatNotifier, SignalRChatNotifier>();
 builder.Services.AddHostedService<FailedMessageDeliveryWorker>();
+builder.Services.AddHostedService<StartupMigrationWorker>();
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
@@ -89,8 +90,6 @@ app.Use((context, next) =>
     return next();
 });
 
-await TryApplyDatabaseMigrationsWithRetryAsync(app.Services, app.Logger);
-
 var storageOptions = app.Services.GetRequiredService<IConfiguration>()
     .GetSection(StorageOptions.SectionName)
     .Get<StorageOptions>() ?? new StorageOptions();
@@ -135,35 +134,3 @@ app.MapGet("/health/ready", async (ApplicationDbContext dbContext, IConnectionMu
 });
 
 app.Run();
-
-static async Task TryApplyDatabaseMigrationsWithRetryAsync(IServiceProvider services, ILogger logger)
-{
-    const int maxRetries = 10;
-
-    for (var attempt = 1; attempt <= maxRetries; attempt++)
-    {
-        try
-        {
-            using var scope = services.CreateScope();
-            var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-            await dbContext.Database.MigrateAsync();
-            return;
-        }
-        catch (Exception ex) when (attempt < maxRetries)
-        {
-            logger.LogWarning(ex, "Database migration attempt {Attempt} of {MaxRetries} failed. Retrying...", attempt, maxRetries);
-            await Task.Delay(TimeSpan.FromSeconds(Math.Min(attempt * 3, 30)));
-        }
-    }
-    
-    try
-    {
-        using var finalScope = services.CreateScope();
-        var finalDbContext = finalScope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-        await finalDbContext.Database.MigrateAsync();
-    }
-    catch (Exception ex)
-    {
-        logger.LogError(ex, "Database migrations failed after all retries. The API will continue starting, but readiness checks will stay unhealthy until the database becomes reachable.");
-    }
-}
