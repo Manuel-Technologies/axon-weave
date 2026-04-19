@@ -13,7 +13,7 @@ public class SignalRChatNotifier : IChatNotifier
     {
         _hubContext = hubContext;
     }
-
+//
     public Task BroadcastMessageAsync(Guid conversationId, MessageDto message, CancellationToken cancellationToken = default) =>
         _hubContext.Clients.Group(ChatHub.GetConversationGroupName(conversationId)).SendAsync("OnMessageReceived", message, cancellationToken);
 

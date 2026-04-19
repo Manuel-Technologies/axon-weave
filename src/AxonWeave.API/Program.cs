@@ -1,4 +1,5 @@
 using AxonWeave.API.Hubs;
+using AxonWeave.API.Middleware;
 using AxonWeave.API.Services;
 using AxonWeave.Application;
 using AxonWeave.Application.Common.Interfaces;
@@ -32,6 +33,23 @@ builder.Services.AddHostedService<FailedMessageDeliveryWorker>();
 builder.Services.AddHostedService<StartupMigrationWorker>();
 
 builder.Services.AddControllers();
+builder.Services.Configure<ApiBehaviorOptions>(options =>
+{
+    options.InvalidModelStateResponseFactory = context =>
+    {
+        var errors = context.ModelState
+            .Where(x => x.Value?.Errors.Count > 0)
+            .ToDictionary(
+                keySelector: x => x.Key,
+                elementSelector: x => x.Value!.Errors.Select(e => e.ErrorMessage).ToArray());
+
+        return new BadRequestObjectResult(new ValidationProblemDetails(errors)
+        {
+            Title = "One or more validation errors occurred.",
+            Status = StatusCodes.Status400BadRequest
+        });
+    };
+});
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddHttpLogging(_ => { });
@@ -89,6 +107,7 @@ app.Use((context, next) =>
     context.Request.Scheme = context.Request.Headers["X-Forwarded-Proto"].FirstOrDefault() ?? context.Request.Scheme;
     return next();
 });
+app.UseMiddleware<GlobalExceptionMiddleware>();
 
 var storageOptions = app.Services.GetRequiredService<IConfiguration>()
     .GetSection(StorageOptions.SectionName)

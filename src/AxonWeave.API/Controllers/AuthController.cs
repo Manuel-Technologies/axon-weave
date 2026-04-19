@@ -34,21 +34,22 @@ public class AuthController : AuthenticatedControllerBase
     [HttpPost("register")]
     public async Task<ActionResult<ApiResponse<RegisterResponse>>> Register([FromBody] RegisterRequest request, CancellationToken cancellationToken)
     {
-        var normalizedPhone = request.PhoneNumber.Trim();
+        var normalizedPhone = NormalizePhoneNumber(request.PhoneNumber);
+        var normalizedName = request.Name.Trim();
         var user = await _unitOfWork.Users.Query().FirstOrDefaultAsync(x => x.PhoneNumber == normalizedPhone, cancellationToken);
         if (user is null)
         {
             user = new User
             {
                 PhoneNumber = normalizedPhone,
-                Name = request.Name.Trim()
+                Name = normalizedName
             };
 
             await _unitOfWork.Users.AddAsync(user, cancellationToken);
         }
         else
         {
-            user.Name = request.Name.Trim();
+            user.Name = normalizedName;
             user.UpdatedAt = DateTimeOffset.UtcNow;
             _unitOfWork.Users.Update(user);
         }
@@ -88,7 +89,7 @@ public class AuthController : AuthenticatedControllerBase
     [HttpPost("verify-otp")]
     public async Task<ActionResult<ApiResponse<AuthResponse>>> VerifyOtp([FromBody] VerifyOtpRequest request, CancellationToken cancellationToken)
     {
-        var normalizedPhone = request.PhoneNumber.Trim();
+        var normalizedPhone = NormalizePhoneNumber(request.PhoneNumber);
         var otp = await _unitOfWork.PendingOtps.Query()
             .Where(x => x.PhoneNumber == normalizedPhone)
             .OrderByDescending(x => x.CreatedAt)
@@ -113,5 +114,16 @@ public class AuthController : AuthenticatedControllerBase
                 User = user.ToDto()
             }
         });
+    }
+
+    private static string NormalizePhoneNumber(string phoneNumber)
+    {
+        var normalized = phoneNumber.Trim().Replace(" ", string.Empty);
+        if (string.IsNullOrWhiteSpace(normalized))
+        {
+            throw new ArgumentException("Phone number is required.");
+        }
+
+        return normalized;
     }
 }

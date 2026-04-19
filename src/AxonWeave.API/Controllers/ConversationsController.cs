@@ -33,6 +33,16 @@ public class ConversationsController : AuthenticatedControllerBase
             participantIds.Add(currentUserId);
         }
 
+        if (!request.IsGroup && participantIds.Count != 2)
+        {
+            return BadRequest(new { message = "Direct conversations must contain exactly two participants." });
+        }
+
+        if (request.IsGroup && string.IsNullOrWhiteSpace(request.Title))
+        {
+            return BadRequest(new { message = "Group conversations require a title." });
+        }
+
         var users = await _unitOfWork.Users.Query()
             .Where(x => participantIds.Contains(x.Id))
             .ToListAsync(cancellationToken);
@@ -40,6 +50,23 @@ public class ConversationsController : AuthenticatedControllerBase
         if (users.Count != participantIds.Count)
         {
             return BadRequest(new { message = "One or more participants were not found." });
+        }
+
+        if (!request.IsGroup)
+        {
+            var existingDirectConversation = await _unitOfWork.Conversations.Query()
+                .Include(x => x.Participants).ThenInclude(x => x.User)
+                .Include(x => x.Messages.OrderByDescending(m => m.CreatedAt).Take(1))
+                .Where(x => x.Type == ConversationType.Direct && x.Participants.Count == 2)
+                .FirstOrDefaultAsync(x =>
+                    x.Participants.All(p => participantIds.Contains(p.UserId)) &&
+                    participantIds.All(id => x.Participants.Select(p => p.UserId).Contains(id)),
+                    cancellationToken);
+
+            if (existingDirectConversation is not null)
+            {
+                return Ok(new ApiResponse<ConversationDto> { Data = existingDirectConversation.ToDto() });
+            }
         }
 
         var conversation = new Conversation
