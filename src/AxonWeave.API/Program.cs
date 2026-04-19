@@ -8,6 +8,7 @@ using AxonWeave.Infrastructure;
 using AxonWeave.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Http.Connections;
 using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
 using StackExchange.Redis;
