@@ -62,6 +62,11 @@ public class MessageController : AuthenticatedControllerBase
     [HttpPost]
     public async Task<ActionResult<ApiResponse<MessageDto>>> Send([FromBody] SendMessageRequest request, CancellationToken cancellationToken)
     {
+        if (string.IsNullOrWhiteSpace(request.EncryptedContent) && string.IsNullOrWhiteSpace(request.MediaUrl))
+        {
+            return BadRequest(new { message = "A message requires encrypted content or a media URL." });
+        }
+
         var currentUserId = GetUserId();
         if (!await _conversationAuthorizationService.IsParticipantAsync(request.ConversationId, currentUserId, cancellationToken))
         {

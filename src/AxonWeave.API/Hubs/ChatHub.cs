@@ -55,6 +55,11 @@ public class ChatHub : Hub
 
     public async Task SendMessage(Guid conversationId, string encryptedContent)
     {
+        if (string.IsNullOrWhiteSpace(encryptedContent))
+        {
+            throw new HubException("Encrypted content is required.");
+        }
+
         var userId = GetUserId();
         var participantIds = await _dbContext.ConversationParticipants
             .Where(x => x.ConversationId == conversationId)
