@@ -12,6 +12,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace AxonWeave.API.Controllers;
 
+/// <summary>
+/// Creates and lists direct and group conversations for the authenticated user.
+/// </summary>
 [Authorize]
 [Route("api/conversations")]
 public class ConversationsController : AuthenticatedControllerBase
@@ -24,6 +27,11 @@ public class ConversationsController : AuthenticatedControllerBase
     }
 
     [HttpPost]
+    [ProducesResponseType(typeof(ApiResponse<ConversationDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    /// <summary>
+    /// Creates a new direct or group conversation, or returns the existing direct conversation when one already exists.
+    /// </summary>
     public async Task<ActionResult<ApiResponse<ConversationDto>>> Create([FromBody] CreateConversationRequest request, CancellationToken cancellationToken)
     {
         var currentUserId = GetUserId();
@@ -99,6 +107,10 @@ public class ConversationsController : AuthenticatedControllerBase
     }
 
     [HttpGet]
+    [ProducesResponseType(typeof(ApiResponse<IReadOnlyCollection<ConversationDto>>), StatusCodes.Status200OK)]
+    /// <summary>
+    /// Lists conversations that include the authenticated user.
+    /// </summary>
     public async Task<ActionResult<ApiResponse<IReadOnlyCollection<ConversationDto>>>> List(CancellationToken cancellationToken)
     {
         var currentUserId = GetUserId();

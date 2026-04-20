@@ -9,10 +9,12 @@ using AxonWeave.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Http.Connections;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.OpenApi.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
 using StackExchange.Redis;
 using System.Threading.RateLimiting;
+using System.Reflection;
 
 var builder = WebApplication.CreateBuilder(args);
 var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
@@ -52,7 +54,47 @@ builder.Services.Configure<ApiBehaviorOptions>(options =>
     };
 });
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(options =>
+{
+    options.SwaggerDoc("v1", new OpenApiInfo
+    {
+        Title = "axon-weave API",
+        Version = "v1",
+        Description = "Open-source chat backend with JWT auth, conversations, messages, media upload, read receipts, health checks, and SignalR real-time events."
+    });
+
+    options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        Name = "Authorization",
+        Type = SecuritySchemeType.Http,
+        Scheme = "bearer",
+        BearerFormat = "JWT",
+        In = ParameterLocation.Header,
+        Description = "Paste a JWT access token. Example: Bearer eyJ..."
+    });
+
+    options.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            },
+            Array.Empty<string>()
+        }
+    });
+
+    var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+    var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+    if (File.Exists(xmlPath))
+    {
+        options.IncludeXmlComments(xmlPath, includeControllerXmlComments: true);
+    }
+});
 builder.Services.AddHttpLogging(_ => { });
 builder.Services.AddRateLimiter(options =>
 {
@@ -117,7 +159,13 @@ var uploadsPath = Path.Combine(app.Environment.ContentRootPath, storageOptions.R
 Directory.CreateDirectory(uploadsPath);
 
 app.UseSwagger();
-app.UseSwaggerUI();
+app.UseSwaggerUI(options =>
+{
+    options.DocumentTitle = "axon-weave Swagger UI";
+    options.SwaggerEndpoint("/swagger/v1/swagger.json", "axon-weave API v1");
+    options.RoutePrefix = "swagger";
+    options.DisplayRequestDuration();
+});
 app.UseHttpLogging();
 app.UseStaticFiles();
 app.UseStaticFiles(new StaticFileOptions

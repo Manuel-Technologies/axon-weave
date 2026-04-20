@@ -93,6 +93,7 @@ After deployment, these URLs should work:
 
 - `/` basic service metadata
 - `/swagger` API docs and testing UI
+- `/swagger/v1/swagger.json` raw OpenAPI document
 - `/health` simple liveness endpoint
 - `/health/ready` readiness check for database + Redis-compatible cache
 
@@ -114,6 +115,32 @@ curl -X POST "https://your-service-name.onrender.com/api/auth/register" \
     "name": "Ada Lovelace"
   }'
 ```
+
+## Swagger UI
+
+Swagger UI is enabled in both local development and deployed environments.
+
+What it gives you:
+
+- live interactive documentation for every REST endpoint
+- built-in request/response schemas
+- JWT authentication support with the `Authorize` button
+- a raw OpenAPI document at `/swagger/v1/swagger.json`
+
+How to use JWT in Swagger UI:
+
+1. Call `POST /api/auth/register`
+2. Call `POST /api/auth/verify-otp`
+3. Copy the returned JWT token
+4. Open `/swagger`
+5. Click `Authorize`
+6. Paste:
+
+```text
+Bearer YOUR_JWT_TOKEN
+```
+
+7. Run the protected endpoints directly from Swagger UI
 
 ## Authentication flow
 

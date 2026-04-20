@@ -9,6 +9,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace AxonWeave.API.Controllers;
 
+/// <summary>
+/// Provides authenticated user discovery endpoints.
+/// </summary>
 [Authorize]
 [Route("api/users")]
 public class UsersController : AuthenticatedControllerBase
@@ -21,6 +24,10 @@ public class UsersController : AuthenticatedControllerBase
     }
 
     [HttpGet]
+    [ProducesResponseType(typeof(ApiResponse<IReadOnlyCollection<UserDto>>), StatusCodes.Status200OK)]
+    /// <summary>
+    /// Searches users by phone number fragment.
+    /// </summary>
     public async Task<ActionResult<ApiResponse<IReadOnlyCollection<UserDto>>>> Search([FromQuery] string? phone, CancellationToken cancellationToken)
     {
         var query = _unitOfWork.Users.Query().AsNoTracking();
