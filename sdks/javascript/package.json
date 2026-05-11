@@ -1,0 +1,10 @@
+{
+  "name": "axon-weave",
+  "version": "0.1.0",
+  "description": "JavaScript SDK for the axon-weave chat API.",
+  "type": "module",
+  "main": "index.mjs",
+  "dependencies": {
+    "@microsoft/signalr": "^8.0.7"
+  }
+}

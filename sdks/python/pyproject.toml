@@ -1,0 +1,12 @@
+[project]
+name = "axon-weave"
+version = "0.1.0"
+description = "Python SDK for the axon-weave chat API."
+requires-python = ">=3.9"
+dependencies = [
+  "requests>=2.31.0"
+]
+
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.build_meta"

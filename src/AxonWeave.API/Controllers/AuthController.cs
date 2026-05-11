@@ -34,12 +34,12 @@ public class AuthController : AuthenticatedControllerBase
     }
 
     [AllowAnonymous]
-    [HttpPost("register")]
-    [ProducesResponseType(typeof(ApiResponse<RegisterResponse>), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
     /// <summary>
     /// Creates or updates a user profile and generates a fresh OTP challenge for the supplied phone number.
     /// </summary>
+    [HttpPost("register")]
+    [ProducesResponseType(typeof(ApiResponse<RegisterResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<ApiResponse<RegisterResponse>>> Register([FromBody] RegisterRequest request, CancellationToken cancellationToken)
     {
         var normalizedPhone = NormalizePhoneNumber(request.PhoneNumber);
@@ -94,13 +94,13 @@ public class AuthController : AuthenticatedControllerBase
     }
 
     [AllowAnonymous]
+    /// <summary>
+    /// Verifies an OTP code and returns a JWT access token for the matching user.
+    /// </summary>
     [HttpPost("verify-otp")]
     [ProducesResponseType(typeof(ApiResponse<AuthResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
-    /// <summary>
-    /// Verifies an OTP code and returns a JWT access token for the matching user.
-    /// </summary>
     public async Task<ActionResult<ApiResponse<AuthResponse>>> VerifyOtp([FromBody] VerifyOtpRequest request, CancellationToken cancellationToken)
     {
         var normalizedPhone = NormalizePhoneNumber(request.PhoneNumber);

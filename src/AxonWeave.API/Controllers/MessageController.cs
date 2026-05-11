@@ -31,12 +31,12 @@ public class MessageController : AuthenticatedControllerBase
         _chatNotifier = chatNotifier;
     }
 
-    [HttpGet]
-    [ProducesResponseType(typeof(ApiResponse<IReadOnlyCollection<MessageDto>>), StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     /// <summary>
     /// Returns paginated messages for a conversation ordered from oldest to newest in the selected page.
     /// </summary>
+    [HttpGet]
+    [ProducesResponseType(typeof(ApiResponse<IReadOnlyCollection<MessageDto>>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<ActionResult<ApiResponse<IReadOnlyCollection<MessageDto>>>> Get([FromQuery] Guid conversationId, [FromQuery] DateTimeOffset? before, [FromQuery] int limit = 50, CancellationToken cancellationToken = default)
     {
         var currentUserId = GetUserId();
@@ -67,13 +67,13 @@ public class MessageController : AuthenticatedControllerBase
         });
     }
 
+    /// <summary>
+    /// Sends a message to a conversation through the REST API.
+    /// </summary>
     [HttpPost]
     [ProducesResponseType(typeof(ApiResponse<MessageDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
-    /// <summary>
-    /// Sends a message to a conversation through the REST API.
-    /// </summary>
     public async Task<ActionResult<ApiResponse<MessageDto>>> Send([FromBody] SendMessageRequest request, CancellationToken cancellationToken)
     {
         if (string.IsNullOrWhiteSpace(request.EncryptedContent) && string.IsNullOrWhiteSpace(request.MediaUrl))
@@ -134,13 +134,13 @@ public class MessageController : AuthenticatedControllerBase
         return Ok(new ApiResponse<MessageDto> { Data = dto });
     }
 
+    /// <summary>
+    /// Deletes a message for everyone in the conversation. Only the original sender can perform this action.
+    /// </summary>
     [HttpDelete("{id:guid}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    /// <summary>
-    /// Deletes a message for everyone in the conversation. Only the original sender can perform this action.
-    /// </summary>
     public async Task<IActionResult> Delete(Guid id, CancellationToken cancellationToken)
     {
         var currentUserId = GetUserId();
@@ -167,13 +167,13 @@ public class MessageController : AuthenticatedControllerBase
         return NoContent();
     }
 
+    /// <summary>
+    /// Marks a message as read for the authenticated user.
+    /// </summary>
     [HttpPut("{id:guid}/read")]
     [ProducesResponseType(typeof(ApiResponse<MessageDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    /// <summary>
-    /// Marks a message as read for the authenticated user.
-    /// </summary>
     public async Task<ActionResult<ApiResponse<MessageDto>>> MarkRead(Guid id, [FromBody] MarkReadRequest request, CancellationToken cancellationToken)
     {
         var currentUserId = GetUserId();

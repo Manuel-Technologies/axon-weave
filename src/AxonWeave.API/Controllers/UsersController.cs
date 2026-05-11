@@ -23,11 +23,11 @@ public class UsersController : AuthenticatedControllerBase
         _unitOfWork = unitOfWork;
     }
 
-    [HttpGet]
-    [ProducesResponseType(typeof(ApiResponse<IReadOnlyCollection<UserDto>>), StatusCodes.Status200OK)]
     /// <summary>
     /// Searches users by phone number fragment.
     /// </summary>
+    [HttpGet]
+    [ProducesResponseType(typeof(ApiResponse<IReadOnlyCollection<UserDto>>), StatusCodes.Status200OK)]
     public async Task<ActionResult<ApiResponse<IReadOnlyCollection<UserDto>>>> Search([FromQuery] string? phone, CancellationToken cancellationToken)
     {
         var query = _unitOfWork.Users.Query().AsNoTracking();

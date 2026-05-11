@@ -5,3 +5,7 @@ uploads/
 build.log
 *.user
 *.suo
+node_modules/
+dist/
+__pycache__/
+*.pyc

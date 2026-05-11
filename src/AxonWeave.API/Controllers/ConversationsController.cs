@@ -26,12 +26,12 @@ public class ConversationsController : AuthenticatedControllerBase
         _unitOfWork = unitOfWork;
     }
 
-    [HttpPost]
-    [ProducesResponseType(typeof(ApiResponse<ConversationDto>), StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     /// <summary>
     /// Creates a new direct or group conversation, or returns the existing direct conversation when one already exists.
     /// </summary>
+    [HttpPost]
+    [ProducesResponseType(typeof(ApiResponse<ConversationDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<ApiResponse<ConversationDto>>> Create([FromBody] CreateConversationRequest request, CancellationToken cancellationToken)
     {
         var currentUserId = GetUserId();
@@ -106,11 +106,11 @@ public class ConversationsController : AuthenticatedControllerBase
         return Ok(new ApiResponse<ConversationDto> { Data = savedConversation.ToDto() });
     }
 
-    [HttpGet]
-    [ProducesResponseType(typeof(ApiResponse<IReadOnlyCollection<ConversationDto>>), StatusCodes.Status200OK)]
     /// <summary>
     /// Lists conversations that include the authenticated user.
     /// </summary>
+    [HttpGet]
+    [ProducesResponseType(typeof(ApiResponse<IReadOnlyCollection<ConversationDto>>), StatusCodes.Status200OK)]
     public async Task<ActionResult<ApiResponse<IReadOnlyCollection<ConversationDto>>>> List(CancellationToken cancellationToken)
     {
         var currentUserId = GetUserId();

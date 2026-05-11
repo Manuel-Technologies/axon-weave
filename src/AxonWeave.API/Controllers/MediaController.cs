@@ -24,13 +24,13 @@ public class MediaController : AuthenticatedControllerBase
         _unitOfWork = unitOfWork;
     }
 
+    /// <summary>
+    /// Uploads a file using multipart form data and returns the stored media metadata and public URL.
+    /// </summary>
     [HttpPost("upload")]
     [RequestSizeLimit(50_000_000)]
     [ProducesResponseType(typeof(ApiResponse<MediaUploadResponse>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    /// <summary>
-    /// Uploads a file using multipart form data and returns the stored media metadata and public URL.
-    /// </summary>
     public async Task<ActionResult<ApiResponse<MediaUploadResponse>>> Upload(IFormFile file, CancellationToken cancellationToken)
     {
         if (file.Length == 0)

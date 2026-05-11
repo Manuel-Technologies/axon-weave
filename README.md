@@ -15,6 +15,7 @@ It is ready to deploy on Render and gives you a real public API URL like:
 - PostgreSQL with EF Core migrations
 - Redis-compatible presence tracking
 - Background worker for retrying failed message deliveries
+- First-party SDKs for TypeScript, JavaScript, Python, and C#
 - Dockerized deployment
 - Render Blueprint file: `render.yaml`
 
@@ -333,6 +334,17 @@ curl -X PUT "$BASE_URL/api/messages/MESSAGE_ID/read" \
   start().catch(console.error);
 </script>
 ```
+
+## SDKs
+
+First-party SDKs live in [`sdks`](./sdks):
+
+- TypeScript: [`sdks/typescript`](./sdks/typescript)
+- JavaScript: [`sdks/javascript`](./sdks/javascript)
+- Python: [`sdks/python`](./sdks/python)
+- C#: [`sdks/csharp`](./sdks/csharp)
+
+Each SDK covers registration, OTP verification, user search, conversations, messages, read receipts, and media upload. TypeScript, JavaScript, and C# also include SignalR connection helpers.
 
 ## Local development
 
