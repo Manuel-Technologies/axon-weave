@@ -9,7 +9,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
-using StackExchange.Redis;
 using System.Text;
 
 namespace AxonWeave.Infrastructure;
@@ -20,7 +19,6 @@ public static class DependencyInjection
     {
         services.Configure<JwtOptions>(configuration.GetSection(JwtOptions.SectionName));
         services.Configure<OtpOptions>(configuration.GetSection(OtpOptions.SectionName));
-        services.Configure<RedisOptions>(configuration.GetSection(RedisOptions.SectionName));
         services.Configure<StorageOptions>(configuration.GetSection(StorageOptions.SectionName));
 
         var sqliteConnectionString = configuration.GetConnectionString("DefaultConnection") ?? "Data Source=axon_weave.db";
@@ -34,13 +32,7 @@ public static class DependencyInjection
         services.AddScoped<IFileStorageService, LocalFileStorageService>();
         services.AddScoped<IConversationAuthorizationService, ConversationAuthorizationService>();
 
-        services.AddSingleton<IConnectionMultiplexer>(sp =>
-        {
-            var options = sp.GetRequiredService<IOptions<RedisOptions>>().Value;
-            var configured = sp.GetRequiredService<IConfiguration>()["REDIS_URL"] ?? options.ConnectionString;
-            return ConnectionMultiplexer.Connect(NormalizeRedisConnectionString(configured));
-        });
-        services.AddSingleton<IPresenceService, RedisPresenceService>();
+        services.AddSingleton<IPresenceService, InMemoryPresenceService>();
 
         var jwtOptions = configuration.GetSection(JwtOptions.SectionName).Get<JwtOptions>() ?? new JwtOptions();
         var signingKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtOptions.SecretKey));
@@ -77,26 +69,5 @@ public static class DependencyInjection
             });
 
         return services;
-    }
-
-    private static string NormalizeRedisConnectionString(string value)
-    {
-        if (string.IsNullOrWhiteSpace(value) || !Uri.TryCreate(value, UriKind.Absolute, out var uri))
-        {
-            return value;
-        }
-
-        if (!uri.Scheme.StartsWith("redis", StringComparison.OrdinalIgnoreCase))
-        {
-            return value;
-        }
-
-        var userInfo = uri.UserInfo.Split(':', 2, StringSplitOptions.TrimEntries);
-        var password = userInfo.Length == 2 ? userInfo[1] : userInfo.ElementAtOrDefault(0);
-        var ssl = uri.Scheme.Equals("rediss", StringComparison.OrdinalIgnoreCase);
-
-        return string.IsNullOrWhiteSpace(password)
-            ? $"{uri.Host}:{uri.Port},ssl={ssl.ToString().ToLowerInvariant()},abortConnect=false"
-            : $"{uri.Host}:{uri.Port},password={Uri.UnescapeDataString(password)},ssl={ssl.ToString().ToLowerInvariant()},abortConnect=false";
     }
 }

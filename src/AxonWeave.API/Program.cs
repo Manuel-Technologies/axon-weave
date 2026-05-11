@@ -12,7 +12,6 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.OpenApi.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
-using StackExchange.Redis;
 using System.Threading.RateLimiting;
 using System.Reflection;
 
@@ -191,12 +190,11 @@ app.MapGet("/", () => Results.Ok(new
     signalRHub = "/hubs/chat"
 }));
 app.MapGet("/health", () => Results.Ok(new { status = "ok" }));
-app.MapGet("/health/ready", async (ApplicationDbContext dbContext, IConnectionMultiplexer redis, CancellationToken cancellationToken) =>
+app.MapGet("/health/ready", async (ApplicationDbContext dbContext, CancellationToken cancellationToken) =>
 {
     var databaseOk = await dbContext.Database.CanConnectAsync(cancellationToken);
-    var redisOk = redis.IsConnected;
 
-    return databaseOk && redisOk
+    return databaseOk
         ? Results.Ok(new { status = "ready" })
         : Results.Problem(statusCode: StatusCodes.Status503ServiceUnavailable, title: "Service is not ready.");
 });

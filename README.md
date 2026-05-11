@@ -1,6 +1,6 @@
 # axon-weave
 
-`axon-weave` is an open-source chat backend built with .NET 8, ASP.NET Core, SignalR, PostgreSQL, and Redis-compatible presence tracking.
+`axon-weave` is an open-source lightweight chat backend MVP built with .NET 8, ASP.NET Core, and SignalR. It is configured to run entirely standalone with SQLite, local file storage, and in-memory presence tracking (no external services needed).
 
 It is ready to deploy on Render and gives you a real public API URL like:
 
@@ -12,8 +12,8 @@ It is ready to deploy on Render and gives you a real public API URL like:
 
 - REST API for auth, users, conversations, messages, media, and read receipts
 - SignalR hub for real-time messaging, typing indicators, online presence, and delivery receipts
-- PostgreSQL with EF Core migrations
-- Redis-compatible presence tracking
+- SQLite with EF Core migrations (Zero-config local database)
+- In-memory presence tracking (No Redis required)
 - Background worker for retrying failed message deliveries
 - First-party SDKs for TypeScript, JavaScript, Python, and C#
 - Dockerized deployment
@@ -96,7 +96,7 @@ After deployment, these URLs should work:
 - `/swagger` API docs and testing UI
 - `/swagger/v1/swagger.json` raw OpenAPI document
 - `/health` simple liveness endpoint
-- `/health/ready` readiness check for database + Redis-compatible cache
+- `/health/ready` readiness check for database
 
 Example:
 
