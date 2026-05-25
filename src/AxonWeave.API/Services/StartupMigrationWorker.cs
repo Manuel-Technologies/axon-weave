@@ -24,8 +24,18 @@ public class StartupMigrationWorker : BackgroundService
             {
                 using var scope = _scopeFactory.CreateScope();
                 var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-                await dbContext.Database.MigrateAsync(stoppingToken);
-                _logger.LogInformation("Database migrations completed successfully.");
+                var migrations = await dbContext.Database.GetMigrationsAsync(stoppingToken);
+                if (migrations.Any())
+                {
+                    await dbContext.Database.MigrateAsync(stoppingToken);
+                    _logger.LogInformation("Database migrations completed successfully.");
+                }
+                else
+                {
+                    await dbContext.Database.EnsureCreatedAsync(stoppingToken);
+                    _logger.LogInformation("Database schema created successfully from the EF Core model because no migrations were found.");
+                }
+
                 return;
             }
             catch (Exception ex) when (attempt < maxRetries)

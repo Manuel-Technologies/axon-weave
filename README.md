@@ -69,10 +69,10 @@ https://axon-weave-api.onrender.com
 
 Your live API URLs will then be:
 
-- `https://axon-weave-api.onrender.com/swagger`
-- `https://axon-weave-api.onrender.com/health`
-- `https://axon-weave-api.onrender.com/api/auth/register`
-- `https://axon-weave-api.onrender.com/hubs/chat`
+- `https://axon-weave.onrender.com/swagger`
+- `https://axon-weave.onrender.com/health`
+- `https://axon-weave.onrender.com/api/auth/register`
+- `https://axon-weave.onrender.com/hubs/chat`
 
 ## Render resources created by this repo
 
@@ -155,17 +155,17 @@ Local development uses a static OTP code:
 
 ### Production on Render
 
-Production is configured to disable static OTP by default:
+The included Render demo blueprint uses a static OTP so the open-source demo can be tested immediately:
 
-- `Otp__UseStaticOtp=false`
+- `Otp__UseStaticOtp=true`
+- `Otp__StaticOtpCode=123456`
 
-That means you should wire in a real SMS/OTP provider before inviting public users.
+That means anyone who knows a phone number can verify with `123456` on the demo deployment. This is useful for testing, but it is not safe for a real public product.
 
-For demo/testing on Render, you can temporarily set:
+Before inviting real users, wire in a real SMS/OTP provider and set:
 
 ```text
-Otp__UseStaticOtp=true
-Otp__StaticOtpCode=123456
+Otp__UseStaticOtp=false
 ```
 
 inside the Render dashboard for the API service.

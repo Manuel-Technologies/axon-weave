@@ -192,7 +192,19 @@ app.MapGet("/", () => Results.Ok(new
 app.MapGet("/health", () => Results.Ok(new { status = "ok" }));
 app.MapGet("/health/ready", async (ApplicationDbContext dbContext, CancellationToken cancellationToken) =>
 {
-    var databaseOk = await dbContext.Database.CanConnectAsync(cancellationToken);
+    var databaseOk = false;
+    try
+    {
+        if (await dbContext.Database.CanConnectAsync(cancellationToken))
+        {
+            await dbContext.Users.Select(x => x.Id).Take(1).ToListAsync(cancellationToken);
+            databaseOk = true;
+        }
+    }
+    catch
+    {
+        databaseOk = false;
+    }
 
     return databaseOk
         ? Results.Ok(new { status = "ready" })

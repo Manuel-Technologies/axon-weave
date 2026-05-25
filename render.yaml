@@ -31,7 +31,9 @@ services:
       - key: Jwt__SecretKey
         generateValue: true
       - key: Otp__UseStaticOtp
-        value: "false"
+        value: "true"
+      - key: Otp__StaticOtpCode
+        value: "123456"
       - key: Otp__ExpiryMinutes
         value: "5"
       - key: Storage__RootPath
