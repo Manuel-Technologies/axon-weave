@@ -10,20 +10,8 @@ services:
     envVars:
       - key: ASPNETCORE_ENVIRONMENT
         value: Production
-      - key: DATABASE_URL
-        fromDatabase:
-          name: axon-weave-db
-          property: connectionString
-      - key: REDIS_URL
-        fromService:
-          type: keyvalue
-          name: axon-weave-redis
-          property: connectionString
-      - key: Redis__ConnectionString
-        fromService:
-          type: keyvalue
-          name: axon-weave-redis
-          property: connectionString
+      - key: ConnectionStrings__DefaultConnection
+        value: Data Source=/app/data/axon_weave.db
       - key: Jwt__Issuer
         value: axon-weave
       - key: Jwt__Audience
@@ -40,19 +28,3 @@ services:
         value: /app/uploads
       - key: Cors__AllowAnyOrigin
         value: "true"
-
-  - type: keyvalue
-    name: axon-weave-redis
-    plan: free
-    region: oregon
-    ipAllowList: []
-    maxmemoryPolicy: allkeys-lru
-
-databases:
-  - name: axon-weave-db
-    plan: free
-    region: oregon
-    databaseName: axon_weave
-    user: axon_weave
-    postgresMajorVersion: "17"
-    ipAllowList: []

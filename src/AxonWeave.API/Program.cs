@@ -157,6 +157,20 @@ var storageOptions = app.Services.GetRequiredService<IConfiguration>()
 var uploadsPath = Path.Combine(app.Environment.ContentRootPath, storageOptions.RootPath);
 Directory.CreateDirectory(uploadsPath);
 
+var sqliteConnectionString = app.Configuration.GetConnectionString("DefaultConnection");
+var sqlitePath = sqliteConnectionString?
+    .Split(';', StringSplitOptions.RemoveEmptyEntries)
+    .Select(x => x.Split('=', 2, StringSplitOptions.TrimEntries))
+    .FirstOrDefault(x => x.Length == 2 && x[0].Equals("Data Source", StringComparison.OrdinalIgnoreCase))?[1];
+if (!string.IsNullOrWhiteSpace(sqlitePath))
+{
+    var sqliteDirectory = Path.GetDirectoryName(Path.GetFullPath(sqlitePath));
+    if (!string.IsNullOrWhiteSpace(sqliteDirectory))
+    {
+        Directory.CreateDirectory(sqliteDirectory);
+    }
+}
+
 app.UseSwagger();
 app.UseSwaggerUI(options =>
 {

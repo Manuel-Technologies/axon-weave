@@ -28,7 +28,7 @@ This repository is configured so it can be deployed as an open API service on Re
 - health endpoints for uptime checks
 - automatic database migration retry on startup
 - configurable CORS for public clients
-- Render-managed PostgreSQL and Key Value services
+- no PostgreSQL or Redis required
 - free-tier-friendly deployment files
 
 ## Important note about Render free plan
@@ -54,10 +54,8 @@ That means `axon-weave` can be deployed for free, but it is best for demos, test
 4. Connect your GitHub account if Render asks.
 5. Select this repository: `Manuel-Technologies/axon-weave`
 6. Render will detect `render.yaml`
-7. Review the services Render is about to create:
+7. Review the service Render is about to create:
    - `axon-weave-api`
-   - `axon-weave-db`
-   - `axon-weave-redis`
 8. Click `Apply`
 9. Wait for deployment to finish
 
@@ -79,14 +77,16 @@ Your live API URLs will then be:
 The `render.yaml` file creates:
 
 - one Docker web service for the API
-- one Render PostgreSQL database
-- one Render Key Value instance
+- no PostgreSQL database
+- no Redis or Render Key Value service
 
 Important:
 
+- the API stores data in SQLite at `/app/data/axon_weave.db`
 - On Render free tier, uploads stored in `/app/uploads` are temporary
-- if the service restarts or spins down, those files disappear
-- for long-term file storage, you should later move uploads to Cloudinary, Amazon S3, Cloudflare R2, or another object storage service
+- on the Render free tier, both the SQLite database file and uploads can be lost on restart, redeploy, or spin-down
+- this setup is best for demos and OSS testing, not durable production data
+- for long-term data, later move the database to PostgreSQL and uploads to Cloudinary, Amazon S3, Cloudflare R2, or another object storage service
 
 ## Health and docs endpoints
 
@@ -379,5 +379,3 @@ Even though deployment is ready, these are the last business-level items to deci
 - Blueprint YAML reference: https://render.com/docs/blueprint-spec
 - Render Blueprints: https://render.com/docs/infrastructure-as-code
 - Render environment variables: https://render.com/docs/environment-variables
-- Render Key Value: https://render.com/docs/key-value
-- Render Postgres: https://render.com/docs/postgresql
